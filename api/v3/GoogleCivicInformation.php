@@ -543,6 +543,7 @@ function google_civic_information_country_reps($level, $roles) {
     $statesProvinces[$stateProvinceId] = strtolower(CRM_Core_PseudoConstant::stateProvinceAbbreviation($stateProvinceId));
   }
 
+  $countryRepsCount = 0;
   foreach($statesProvinces as $stateProvinceId => $stateProvinceAbbrev){
     foreach($roles as $role) {
 
@@ -557,7 +558,7 @@ function google_civic_information_country_reps($level, $roles) {
       $countryReps = electoral_curl($countryUrl);
 
       //Process the reps
-      $countryRepsCount = electoral_process_reps($countryReps, $countryDivision, $level, $stateProvinceId, NULL, NULL);
+      $countryRepsCount += electoral_process_reps($countryReps, $countryDivision, $level, $stateProvinceId, NULL, NULL);
     }
   }
 
@@ -584,6 +585,7 @@ function google_civic_information_state_reps($level, $roles) {
     $statesProvinces[$stateProvinceId] = strtolower(CRM_Core_PseudoConstant::stateProvinceAbbreviation($stateProvinceId));
   }
 
+  $stateRepsCount = 0;
   foreach($statesProvinces as $stateProvinceId => $stateProvinceAbbrev){
     foreach($roles as $role) {
 
@@ -598,7 +600,7 @@ function google_civic_information_state_reps($level, $roles) {
       $stateReps = electoral_curl($stateUrl);
 
       //Process the reps
-      $stateRepsCount = electoral_process_reps($stateReps, $stateDivision, $level, $stateProvinceId, NULL, NULL);
+      $stateRepsCount += electoral_process_reps($stateReps, $stateDivision, $level, $stateProvinceId, NULL, NULL);
     }
   }
 
@@ -628,6 +630,7 @@ function google_civic_information_county_reps($level) {
     $counties[$countyId] = strtolower(CRM_Core_PseudoConstant::county($countyId));
   }
 
+  $countyRepsCount = 0;
   foreach($statesProvinces as $stateProvinceId => $stateProvinceAbbrev) {
     foreach($counties as $countyId => $county) {
 
@@ -642,7 +645,7 @@ function google_civic_information_county_reps($level) {
       $countyReps = electoral_curl($countyUrl);
 
       //Process the reps
-      $countyRepsCount = electoral_process_reps($countyReps, $countyDivision, $level, $stateProvinceId, ucwords($county), NULL);
+      $countyRepsCount += electoral_process_reps($countyReps, $countyDivision, $level, $stateProvinceId, ucwords($county), NULL);
     }
   }
 
@@ -741,16 +744,27 @@ function electoral_process_reps ($reps, $division, $level, $stateProvinceId, $co
       //Parse Name
       $repParams = electoral_parse_name($repName, $repParams);
 
-      //Set Bioguide ID, only for country level 
-      if ($level == 'country') {
-        $bioguideId = $repParams['external_identifier'] = $repBioguideIds[$repName];
+      // Work with external_identifier.
+      // Use buioguideId if possible.
+      $bioguideId = $repParams['external_identifier'] = $repBioguideIds[$repName];
 
-        //Check if rep already exists, to avoid duplicate contacts
-        $repExistContact = civicrm_api3('Contact', 'get', ['return' => 'id','external_identifier' => "$bioguideId",]);
-        if ($repExistContact['count'] == 1) {
-          $repParams['id'] = $repExistContact['id'];
-        }
-      } else {
+      if (empty($repParams['external_identifier'])) {
+        // If no external_identifier exists, concat several values, hash them for an ID:
+        // - "G" for "Google"
+        // - office divisionId
+        // - office name
+        // - first and last name
+        $repParams['external_identifier'] = "G:" . md5("{$office['divisionId']}|{$office['name']}|{$repParams['first_name']}|{$repParams['last_name']}");
+      }
+
+      //Check if rep already exists, to avoid duplicate contacts
+      $repExistContact = civicrm_api3('Contact', 'get', ['return' => 'id','external_identifier' => $repParams['external_identifier'],]);
+      if ($repExistContact['count'] == 1) {
+        $repParams['id'] = $repExistContact['id'];
+      }
+    
+      // If no existing contact was found, try again with just name and phone number.
+      if (empty($repParams['id'])) {
         $repExistContact = civicrm_api3('Contact', 'get', [
           'return' => 'id',
           'first_name' => $repParams['first_name'],
@@ -1027,7 +1041,9 @@ function electoral_create_website($contactId, $website, $websiteType) {
   //Add an updated website or a new one if none exist,
   //and set it to primary
   if (($websiteExist['count'] == 1 && $websiteExist['values'][$websiteExistId]['url'] != $website) ||
-       $websiteExist['count'] == 0 ) {
+       $websiteExist['count'] == 0 
+    && strlen($website) <= 128
+  ) {
     $websiteParams = array(
       'contact_id' => $contactId,
       'url' => "$website",
