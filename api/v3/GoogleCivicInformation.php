@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 /**
  * Google Civic Information API
@@ -8,7 +8,7 @@
  * @see civicrm_api3_create_success
  * @see civicrm_api3_create_error
  * @throws API_Exception
- */ 
+ */
 function civicrm_api3_google_civic_information_districts($params) {
 
   $limit = 100;
@@ -60,7 +60,7 @@ function google_civic_information_country_districts($level, $limit, $update) {
   while ($contactAddresses->fetch()) {
 
     $streetAddress = $city = $state = $districts = '';
-    
+
     //Assemble the API URL
     $streetAddress = rawurlencode($contactAddresses->street_address);
     $city = rawurlencode($contactAddresses->city);
@@ -79,7 +79,7 @@ function google_civic_information_country_districts($level, $limit, $update) {
       $countryDivision = strtolower("ocd-division/country:us/state:$stateProvinceAbbrev");
       foreach($districts['divisions'] as $divisionKey => $division) {
         //Check if there's a district
-        $divisionDistrict = ''; 
+        $divisionDistrict = '';
         if($countryDivision != $divisionKey) {
           $divisionParts = explode(':', str_replace($countryDivision, '', $divisionKey));
           $divisionDistrict = $divisionParts[1];
@@ -133,7 +133,7 @@ function google_civic_information_state_districts($level, $limit, $update) {
   while ($contactAddresses->fetch()) {
 
     $streetAddress = $city = $state = $districts = '';
-    
+
     //Assemble the API URL
     $streetAddress = rawurlencode($contactAddresses->street_address);
     $city = rawurlencode($contactAddresses->city);
@@ -152,7 +152,7 @@ function google_civic_information_state_districts($level, $limit, $update) {
       $countryDivision = strtolower("ocd-division/country:us/state:$stateProvinceAbbrev");
       foreach($districts['divisions'] as $divisionKey => $division) {
         //Check if there's a district
-        $divisionDistrict = ''; 
+        $divisionDistrict = '';
         if($countryDivision != $divisionKey) {
           $divisionParts = explode(':', str_replace($countryDivision . '/', '', $divisionKey));
           if ($divisionParts[0] == 'sldu') {
@@ -204,7 +204,7 @@ function google_civic_information_county_districts($level, $limit, $update) {
   while ($contactAddresses->fetch()) {
 
     $streetAddress = $city = $state = $districts = '';
-    
+
     //Assemble the API URL
     $streetAddress = rawurlencode($contactAddresses->street_address);
     $city = rawurlencode($contactAddresses->city);
@@ -223,11 +223,11 @@ function google_civic_information_county_districts($level, $limit, $update) {
       $countyDivision = strtolower("ocd-division/country:us/state:$stateProvinceAbbrev");
       foreach($districts['divisions'] as $divisionKey => $division) {
         //Check if there's a district
-        $divisionDistrict = ''; 
+        $divisionDistrict = '';
         $divisionParts = explode('/', str_replace($countyDivision . '/', '', $divisionKey));
         if(substr($divisionParts[0], 0, 6) == 'county' &&
            in_array(substr($divisionParts[0], 7), $counties)) {
-           
+
           $county = ucwords(substr($divisionParts[0], 7));
           if ($divisionParts[1]) {
             list($label, $divisionDistrict) = explode(':', $divisionParts[1]);
@@ -274,7 +274,7 @@ function google_civic_information_city_districts($level, $limit, $update) {
   while ($contactAddresses->fetch()) {
 
     $streetAddress = $city = $state = $districts = '';
-    
+
     //Assemble the API URL
     $streetAddress = rawurlencode($contactAddresses->street_address);
     $city = rawurlencode($contactAddresses->city);
@@ -294,7 +294,7 @@ function google_civic_information_city_districts($level, $limit, $update) {
       $districtsFound = 0;
       foreach($districts['divisions'] as $divisionKey => $division) {
         //Check if there's a district
-        $divisionDistrict = ''; 
+        $divisionDistrict = '';
         $divisionParts = explode('/', str_replace($cityDivision . '/', '', $divisionKey));
         if(substr($divisionParts[0], 0, 5) == 'place'){
           $districtsFound++;
@@ -493,7 +493,7 @@ function electoral_district_exists($contactId, $level, $chamber = NULL) {
 }
 
 /*
- * Helper function to get the table id 
+ * Helper function to get the table id
  * of the Electoral Districts custom table
  */
 function electoral_district_table_name_id() {
@@ -718,7 +718,7 @@ function electoral_process_reps ($reps, $division, $level, $stateProvinceId, $co
   foreach($reps['offices'] as $officeKey => $office) {
 
     //Check if there's a district
-    $officeDistrict = ''; 
+    $officeDistrict = '';
     $hasOfficeDistrict = strstr(str_replace($division, '', $office['divisionId']), ":");
     if ($hasOfficeDistrict !== FALSE) {
       $officeDistrictParts = explode(':', str_replace($division, '', $office['divisionId']));
@@ -762,7 +762,7 @@ function electoral_process_reps ($reps, $division, $level, $stateProvinceId, $co
       if ($repExistContact['count'] == 1) {
         $repParams['id'] = $repExistContact['id'];
       }
-    
+
       // If no existing contact was found, try again with just name and phone number.
       if (empty($repParams['id'])) {
         $repExistContact = civicrm_api3('Contact', 'get', [
@@ -834,10 +834,10 @@ function electoral_process_reps ($reps, $division, $level, $stateProvinceId, $co
           }
         }
       }
-        
+
       //Tag the legislator with their party
-      if ($repExistContact['count'] == 0 && 
-          isset($reps['officials'][$officialIndex]['party'])) { 
+      if ($repExistContact['count'] == 0 &&
+          isset($reps['officials'][$officialIndex]['party'])) {
         electoral_tag_party($contactId, $reps['officials'][$officialIndex]['party']);
       }
     }
@@ -847,7 +847,7 @@ function electoral_process_reps ($reps, $division, $level, $stateProvinceId, $co
   return $repsCreatedUpdated;
 }
 
-/* 
+/*
  * Helper function to parse Official Names
  */
 function electoral_parse_name($name, $params) {
@@ -1041,7 +1041,7 @@ function electoral_create_website($contactId, $website, $websiteType) {
   //Add an updated website or a new one if none exist,
   //and set it to primary
   if (($websiteExist['count'] == 1 && $websiteExist['values'][$websiteExistId]['url'] != $website) ||
-       $websiteExist['count'] == 0 
+       $websiteExist['count'] == 0
     && strlen($website) <= 128
   ) {
     $websiteParams = array(
