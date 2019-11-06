@@ -305,14 +305,16 @@ function google_civic_information_city_districts($level, $limit, $update) {
           electoral_district_create_update($contactAddresses->contact_id, $level, $contactAddresses->state_province_id, NULL, $city, NULL, $divisionDistrict);
         }
       }
+      /*
+      // TODO: record this "not found" error, but only after you've modified
+      // electoral_district_addresses() to honor it on a per-level basis,
+      // which also requires modifying electoral_district_address_errors() to
+      // append to a delimited list of levels in the 'message' field.
       if (!$districtsFound) {
         $districts = _electoral_build_notfound_error($level);
-        // TODO: record this "not found" error, but only after you've modified
-        // electoral_district_addresses() to honor it on a per-level basis,
-        // which also requires modifying electoral_district_address_errors() to
-        // append to a delimited list of levels in the 'message' field.
         electoral_district_address_errors($districts, $contactAddresses->id, $url);
       }
+      */
       $addressesDistricted++;
     }
   }
