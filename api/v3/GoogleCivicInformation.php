@@ -138,7 +138,7 @@ function google_civic_information_state_districts($level, $limit, $update) {
     $streetAddress = rawurlencode($contactAddresses->street_address);
     $city = rawurlencode($contactAddresses->city);
     $stateProvinceAbbrev = CRM_Core_PseudoConstant::stateProvinceAbbreviation($contactAddresses->state_province_id);
-    $url = "https://www.googleapis.com/civicinfo/v2/representatives?levels=$level&roles=legislatorUpperBody&roles=legislatorLowerBody&key=$apikey&address=$streetAddress%20$city%20$stateProvinceAbbrev";
+    $url = "https://www.googleapis.com/civicinfo/v2/representatives?levels=$level&key=$apikey&address=$streetAddress%20$city%20$stateProvinceAbbrev";
 
     $districts = electoral_curl($url);
 
@@ -226,11 +226,12 @@ function google_civic_information_county_districts($level, $limit, $update) {
         $divisionDistrict = ''; 
         $divisionParts = explode('/', str_replace($countyDivision . '/', '', $divisionKey));
         if(substr($divisionParts[0], 0, 6) == 'county' &&
-           substr($divisionParts[1], 0, 16) == 'council_district' &&
            in_array(substr($divisionParts[0], 7), $counties)) {
            
           $county = ucwords(substr($divisionParts[0], 7));
-          $divisionDistrict = substr($divisionParts[1], 17);
+          if ($divisionParts[1]) {
+            list($label, $divisionDistrict) = explode(':', $divisionParts[1]);
+          }
           electoral_district_create_update($contactAddresses->contact_id, $level, $contactAddresses->state_province_id, $county, NULL, NULL, $divisionDistrict);
         }
       }
@@ -290,18 +291,27 @@ function google_civic_information_city_districts($level, $limit, $update) {
     //Process divisions
     } else {
       $cityDivision = strtolower("ocd-division/country:us/state:$stateProvinceAbbrev");
+      $districtsFound = 0;
       foreach($districts['divisions'] as $divisionKey => $division) {
         //Check if there's a district
         $divisionDistrict = ''; 
         $divisionParts = explode('/', str_replace($cityDivision . '/', '', $divisionKey));
-        if(substr($divisionParts[0], 0, 5) == 'place' &&
-           substr($divisionParts[1], 0, 16) == 'council_district' &&
-           in_array(substr($divisionParts[0], 6), $cities)) {
-           
+        if(substr($divisionParts[0], 0, 5) == 'place'){
+          $districtsFound++;
           $city = ucwords(substr($divisionParts[0], 6));
-          $divisionDistrict = substr($divisionParts[1], 17);
+          if ($divisionParts[1]) {
+            list($label, $divisionDistrict) = explode(':', $divisionParts[1]);
+          }
           electoral_district_create_update($contactAddresses->contact_id, $level, $contactAddresses->state_province_id, NULL, $city, NULL, $divisionDistrict);
         }
+      }
+      if (!$districtsFound) {
+        $districts = _electoral_build_notfound_error($level);
+        // TODO: record this "not found" error, but only after you've modified
+        // electoral_district_addresses() to honor it on a per-level basis,
+        // which also requires modifying electoral_district_address_errors() to
+        // append to a delimited list of levels in the 'message' field.
+        electoral_district_address_errors($districts, $contactAddresses->id, $url);
       }
       $addressesDistricted++;
     }
@@ -377,6 +387,25 @@ function electoral_district_addresses($limit, $level, $statesProvinces, $update)
     $addressSql .= "
           AND ed.id IS NULL
     ";
+  }
+
+  if ($level == 'locality') {
+      // Set params for address lookup
+    $key = max(array_keys($addressSqlParams));
+
+    $includedCities = explode(',', civicrm_api3('Setting', 'getvalue', ['name' => 'includedCities']));
+    if (!empty($includedCities)) {
+      $citiesSqlIns = array();
+      foreach ($includedCities as $city) {
+        $key++;
+        $citiesSqlIns[] = "%{$key}";
+        $addressSqlParams[$key] = array($city, 'String');
+      }
+      $citiesSqlIn = implode(',', $citiesSqlIns);
+      $addressSql .= "
+        AND ca.city IN ($citiesSqlIn)
+      ";
+    }
   }
 
   //Throttling
@@ -1036,6 +1065,7 @@ function electoral_curl($url) {
   curl_setopt($ch, CURLOPT_URL, $url);
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
   curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $verifySSL);
+  curl_setopt($ch, CURLOPT_REFERER, CRM_Utils_System::absoluteURL(''));
 
   //Get results from API and decode the JSON
   $curl_return = json_decode(curl_exec($ch), TRUE);
@@ -1044,4 +1074,19 @@ function electoral_curl($url) {
   curl_close($ch);
 
   return $curl_return;
+}
+
+
+function _electoral_build_notfound_error($level) {
+  $districts = array();
+  $districts['error'] = array (
+    'code' => '-999',
+    'errors' => array(
+      array (
+        'reason' => 'levelNotFound',
+      ),
+    ),
+    'message' => $level,
+  );
+  return $districts;
 }
