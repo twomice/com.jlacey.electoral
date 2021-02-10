@@ -166,6 +166,9 @@ function google_civic_information_state_districts($params) {
       foreach($districts['divisions'] as $divisionKey => $division) {
         //Check if there's a district
         $divisionDistrict = '';
+        $chamber = '';
+        // $countryDivision == $divisionKey when it's not a legislative body, i.e. executive branch.
+        // So if they don't equal, this is a legislative district, therefore we need to parse ouf the chamber and district.
         if($countryDivision != $divisionKey) {
           $divisionParts = explode(':', str_replace($countryDivision . '/', '', $divisionKey));
           if ($divisionParts[0] == 'sldu') {
