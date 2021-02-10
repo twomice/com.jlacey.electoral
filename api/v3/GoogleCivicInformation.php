@@ -429,10 +429,8 @@ function electoral_district_address_errors($districts, $addressId, $url) {
   $errorSummary = "{$districts['error']['code']}, {$districts['error']['errors'][0]['reason']}, {$districts['error']['message']}";
   CRM_Core_Error::debug_log_message("Electoral: For address id {$addressId}, Google API returned error: $errorSummary; for url $url");
   //Retain the error, so we can filter out the address on future runs until it's corrected
-  if ($districts['error']['code'] == 429) {
-    // Don't mark the record for error code 429 ("rateLimitExceeded"). But do log it to error log:
-    \Civi::log()->error("Electoral: Error from GoogleCiviInformation API: {$error['code']}; {$error['reason']}; {$error['message']}; FOR address ID '{$addressId}'.");
-  } else {
+  if ($districts['error']['code'] != 429) {
+    // Don't mark the record for error code 429 ("rateLimitExceeded").
     $address_error_create = civicrm_api3('CustomValue', 'create', [
       'entity_id' => $addressId,
       'custom_electoral_status:Error Code' => substr($districts['error']['code'], 0, 11),
