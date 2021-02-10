@@ -11,27 +11,28 @@
  */
 function civicrm_api3_google_civic_information_districts($params) {
 
-  $limit = 100;
-  $update = 0;
-  if (isset($params['limit']) && is_numeric($params['limit']) ) {
-    $limit = $params['limit'];
+  // Set default params if not defined.
+  $defaultLimit = 100;
+  $defaultUpdate = 0;
+  if (!isset($params['limit']) || !is_numeric($params['limit']) ) {
+    $params['limit'] = $defaultLimit;
   }
-  if (isset($params['update']) && is_numeric($params['update']) ) {
-    $update = $params['update'];
+  if (!isset($params['update']) || !is_numeric($params['update']) ) {
+    $params['update'] = $defaultUpdate;
   }
 
   switch ($params['level']) {
     case 'country':
-      $result = google_civic_information_country_districts($params['level'], $limit, $update);
+      $result = google_civic_information_country_districts($params);
       break;
     case 'administrativeArea1':
-      $result = google_civic_information_state_districts($params['level'], $limit, $update);
+      $result = google_civic_information_state_districts($params);
       break;
     case 'administrativeArea2':
-      $result = google_civic_information_county_districts($params['level'], $limit, $update);
+      $result = google_civic_information_county_districts($params);
       break;
     case 'locality':
-      $result = google_civic_information_city_districts($params['level'], $limit, $update);
+      $result = google_civic_information_city_districts($params);
       break;
   }
   return civicrm_api3_create_success("$result");
@@ -41,7 +42,11 @@ function civicrm_api3_google_civic_information_districts($params) {
 /*
  * Function to create country level districts
  */
-function google_civic_information_country_districts($level, $limit, $update) {
+function google_civic_information_country_districts($params) {
+  $level = $params['level'];
+  $limit = $params['limit'];
+  $update = $params['update'];
+  $throttle = $params['throttle'];
 
   //Set variables
   $addressesDistricted = $addressesWithErrors = 0;
@@ -102,6 +107,10 @@ function google_civic_information_country_districts($level, $limit, $update) {
       }
       $addressesDistricted++;
     }
+    // If called for in params, sleep for 1 second between calls.
+    if ($throttle) {
+      sleep(1);
+    }
   }
 
   $edDistrictReturn = "$addressesDistricted addresses districted.";
@@ -114,7 +123,11 @@ function google_civic_information_country_districts($level, $limit, $update) {
 /*
  * Function to create state level districts
  */
-function google_civic_information_state_districts($level, $limit, $update) {
+function google_civic_information_state_districts($params) {
+  $level = $params['level'];
+  $limit = $params['limit'];
+  $update = $params['update'];
+  $throttle = $params['throttle'];
 
   //Set variables
   $addressesDistricted = $addressesWithErrors = 0;
@@ -167,6 +180,10 @@ function google_civic_information_state_districts($level, $limit, $update) {
       }
       $addressesDistricted++;
     }
+    // If called for in params, sleep for 1 second between calls.
+    if ($throttle) {
+      sleep(1);
+    }
   }
 
   $edDistrictReturn = "$addressesDistricted addresses districted.";
@@ -179,7 +196,11 @@ function google_civic_information_state_districts($level, $limit, $update) {
 /*
  * Function to create county level districts
  */
-function google_civic_information_county_districts($level, $limit, $update) {
+function google_civic_information_county_districts($params) {
+  $level = $params['level'];
+  $limit = $params['limit'];
+  $update = $params['update'];
+  $throttle = $params['throttle'];
 
   //Set variables
   $addressesDistricted = $addressesWithErrors = 0;
@@ -237,6 +258,10 @@ function google_civic_information_county_districts($level, $limit, $update) {
       }
       $addressesDistricted++;
     }
+    // If called for in params, sleep for 1 second between calls.
+    if ($throttle) {
+      sleep(1);
+    }
   }
 
   $edDistrictReturn = "$addressesDistricted addresses districted.";
@@ -249,7 +274,11 @@ function google_civic_information_county_districts($level, $limit, $update) {
 /*
  * Function to create city level districts
  */
-function google_civic_information_city_districts($level, $limit, $update) {
+function google_civic_information_city_districts($params) {
+  $level = $params['level'];
+  $limit = $params['limit'];
+  $update = $params['update'];
+  $throttle = $params['throttle'];
 
   //Set variables
   $addressesDistricted = $addressesWithErrors = 0;
@@ -316,6 +345,10 @@ function google_civic_information_city_districts($level, $limit, $update) {
       }
       */
       $addressesDistricted++;
+    }
+    // If called for in params, sleep for 1 second between calls.
+    if ($throttle) {
+      sleep(1);
     }
   }
 
