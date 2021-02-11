@@ -520,16 +520,23 @@ function electoral_district_exists($contactId, $level, $chamber = NULL) {
     'return' => "id",
     'id' => $contactId,
   );
+  // Filter on level.
   $edLevelId = civicrm_api3('CustomField', 'getvalue', ['return' => "id",'custom_group_id' => "electoral_districts",'name' => "electoral_level",]);
   $edLevelField = 'custom_' . $edLevelId;
   $edExistsParams[$edLevelField] = "$level";
-  if (!empty($chamber)) {
-    $edChamberId = civicrm_api3('CustomField', 'getvalue', ['return' => "id",'custom_group_id' => "electoral_districts",'name' => "electoral_chamber",]);
-    $edChamberField = 'custom_' . $edChamberId;
+
+  // Filter on chamber, noting that empty values are valid and should represent a distinct district record.
+  $edChamberId = civicrm_api3('CustomField', 'getvalue', ['return' => "id",'custom_group_id' => "electoral_districts",'name' => "electoral_chamber",]);
+  $edChamberField = 'custom_' . $edChamberId;
+  if (empty($chamber)) {
+    $edExistsParams[$edChamberField] = array('EMPTY' => 1);
+  }
+  else {
     $edExistsParams[$edChamberField] = "$chamber";
   }
-  $edExists = civicrm_api3('Contact', 'get', $edExistsParams);
 
+  // Get all existing districts matching the parameters.
+  $edExists = civicrm_api3('Contact', 'get', $edExistsParams);
   return $edExists;
 }
 
