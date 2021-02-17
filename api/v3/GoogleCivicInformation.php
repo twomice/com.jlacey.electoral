@@ -253,7 +253,7 @@ function google_civic_information_county_districts($params) {
            in_array(substr($divisionParts[0], 7), $counties)) {
 
           $county = ucwords(substr($divisionParts[0], 7));
-          if ($divisionParts[1]) {
+          if (!empty($divisionParts[1])) {
             list($label, $divisionDistrict) = explode(':', $divisionParts[1]);
           }
           electoral_district_create_update($contactAddresses->contact_id, $level, $contactAddresses->state_province_id, $county, NULL, NULL, $divisionDistrict);
