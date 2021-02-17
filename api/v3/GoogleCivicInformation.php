@@ -268,6 +268,7 @@ function google_civic_information_county_districts($params) {
     //Process divisions
     } else {
       $countyDivision = strtolower("ocd-division/country:us/state:$stateProvinceAbbrev");
+      $districtsFound = 0;
       foreach($districts['divisions'] as $divisionKey => $division) {
         //Check if there's a district
         $divisionDistrict = '';
@@ -276,6 +277,7 @@ function google_civic_information_county_districts($params) {
           // replace underscores with spaces; google api uses underscores but civicrm does not.
           in_array(str_replace('_', ' ', substr($divisionParts[0], 7)), $counties)) {
 
+          $districtsFound++;
           $county = ucwords(substr($divisionParts[0], 7));
           if (!empty($divisionParts[1])) {
             list($label, $divisionDistrict) = explode(':', $divisionParts[1]);
@@ -283,6 +285,12 @@ function google_civic_information_county_districts($params) {
           electoral_district_create_update($contactAddresses->contact_id, $level, $contactAddresses->state_province_id, $county, NULL, NULL, $divisionDistrict);
         }
       }
+
+      // Record this "not found" status with a special value in the electoral_district record.
+      if (!$districtsFound) {
+        electoral_district_create_update($contactAddresses->contact_id, $level, NULL, '[DistrictNotFound]');
+      }
+
       $addressesDistricted++;
       $addressesCidsDistricted[] = $contactAddresses->contact_id;
     }
