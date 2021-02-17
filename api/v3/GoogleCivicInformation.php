@@ -250,7 +250,8 @@ function google_civic_information_county_districts($params) {
         $divisionDistrict = '';
         $divisionParts = explode('/', str_replace($countyDivision . '/', '', $divisionKey));
         if(substr($divisionParts[0], 0, 6) == 'county' &&
-           in_array(substr($divisionParts[0], 7), $counties)) {
+          // replace underscores with spaces; google api uses underscores but civicrm does not.
+          in_array(str_replace('_', ' ', substr($divisionParts[0], 7)), $counties)) {
 
           $county = ucwords(substr($divisionParts[0], 7));
           if (!empty($divisionParts[1])) {
