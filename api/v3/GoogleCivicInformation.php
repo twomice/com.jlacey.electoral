@@ -285,7 +285,6 @@ function google_civic_information_city_districts($params) {
 
   //Set variables
   $addressesDistricted = $addressesWithErrors = 0;
-  $addressesCidsWithErrors = $addressesCidsDistricted = [];
 
   //API Key
   $apikey = civicrm_api3('Setting', 'getvalue', ['name' => 'googleCivicInformationAPIKey']);
@@ -320,7 +319,6 @@ function google_civic_information_city_districts($params) {
     //Check for errors first
     if ( isset($districts['error']) ) {
       $addressesWithErrors++;
-      $addressesCidsWithErrors[] = $contactAddresses->contact_id;
       electoral_district_address_errors($districts, $contactAddresses->id, $url);
     //Process divisions
     } else {
@@ -346,7 +344,6 @@ function google_civic_information_city_districts($params) {
       }
 
       $addressesDistricted++;
-      $addressesCidsDistricted[] = $contactAddresses->contact_id;
     }
     // If called for in params, sleep for 1 second between calls.
     if ($throttle) {
@@ -355,10 +352,8 @@ function google_civic_information_city_districts($params) {
   }
 
   $edDistrictReturn = "$addressesDistricted addresses districted.";
-  $edDistrictReturn .= "(" . implode(', ', $addressesCidsDistricted) . ")";
   if ($addressesWithErrors > 0) {
     $edDistrictReturn .= " $addressesWithErrors addresses with errors.";
-    $edDistrictReturn .= "(" . implode(', ', $addressesCidsWithErrors) . ")";
   }
   return $edDistrictReturn;
 }
