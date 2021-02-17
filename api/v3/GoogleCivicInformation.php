@@ -285,6 +285,7 @@ function google_civic_information_city_districts($params) {
 
   //Set variables
   $addressesDistricted = $addressesWithErrors = 0;
+  $addressesCidsWithErrors = $addressesCidsDistricted = [];
 
   //API Key
   $apikey = civicrm_api3('Setting', 'getvalue', ['name' => 'googleCivicInformationAPIKey']);
@@ -319,6 +320,7 @@ function google_civic_information_city_districts($params) {
     //Check for errors first
     if ( isset($districts['error']) ) {
       $addressesWithErrors++;
+      $addressesCidsWithErrors[] = $contactAddresses->contact_id;
       electoral_district_address_errors($districts, $contactAddresses->id, $url);
     //Process divisions
     } else {
@@ -337,17 +339,14 @@ function google_civic_information_city_districts($params) {
           electoral_district_create_update($contactAddresses->contact_id, $level, $contactAddresses->state_province_id, NULL, $city, NULL, $divisionDistrict);
         }
       }
-      /*
-      // TODO: record this "not found" error, but only after you've modified
-      // electoral_district_addresses() to honor it on a per-level basis,
-      // which also requires modifying electoral_district_address_errors() to
-      // append to a delimited list of levels in the 'message' field.
+
+      // Record this "not found" status with a special value in the electoral_district record.
       if (!$districtsFound) {
-        $districts = _electoral_build_notfound_error($level);
-        electoral_district_address_errors($districts, $contactAddresses->id, $url);
+        electoral_district_create_update($contactAddresses->contact_id, $level, NULL, '[DistrictNotFound]');
       }
-      */
+
       $addressesDistricted++;
+      $addressesCidsDistricted[] = $contactAddresses->contact_id;
     }
     // If called for in params, sleep for 1 second between calls.
     if ($throttle) {
@@ -356,8 +355,10 @@ function google_civic_information_city_districts($params) {
   }
 
   $edDistrictReturn = "$addressesDistricted addresses districted.";
+  $edDistrictReturn .= "(" . implode(', ', $addressesCidsDistricted) . ")";
   if ($addressesWithErrors > 0) {
     $edDistrictReturn .= " $addressesWithErrors addresses with errors.";
+    $edDistrictReturn .= "(" . implode(', ', $addressesCidsWithErrors) . ")";
   }
   return $edDistrictReturn;
 }
