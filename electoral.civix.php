@@ -3,259 +3,197 @@
 // AUTO-GENERATED FILE -- Civix may overwrite any changes made to this file
 
 /**
- * (Delegated) Implementation of hook_civicrm_config
- *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_config
+ * The ExtensionUtil class provides small stubs for accessing resources of this
+ * extension.
  */
-function _electoral_civix_civicrm_config(&$config = NULL) {
-  static $configured = FALSE;
-  if ($configured) return;
-  $configured = TRUE;
+class CRM_Electoral_ExtensionUtil {
+  const SHORT_NAME = 'electoral';
+  const LONG_NAME = 'com.jlacey.electoral';
+  const CLASS_PREFIX = 'CRM_Electoral';
 
-  $template =& CRM_Core_Smarty::singleton();
-
-  $extRoot = dirname( __FILE__ ) . DIRECTORY_SEPARATOR;
-  $extDir = $extRoot . 'templates';
-
-  if ( is_array( $template->template_dir ) ) {
-      array_unshift( $template->template_dir, $extDir );
-  } else {
-      $template->template_dir = array( $extDir, $template->template_dir );
-  }
-
-  $include_path = $extRoot . PATH_SEPARATOR . get_include_path( );
-  set_include_path( $include_path );
-}
-
-/**
- * (Delegated) Implementation of hook_civicrm_xmlMenu
- *
- * @param $files array(string)
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_xmlMenu
- */
-function _electoral_civix_civicrm_xmlMenu(&$files) {
-  foreach (_electoral_civix_glob(__DIR__ . '/xml/Menu/*.xml') as $file) {
-    $files[] = $file;
-  }
-}
-
-/**
- * Implementation of hook_civicrm_install
- *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_install
- */
-function _electoral_civix_civicrm_install() {
-  _electoral_civix_civicrm_config();
-  if ($upgrader = _electoral_civix_upgrader()) {
-    $upgrader->onInstall();
-  }
-}
-
-/**
- * Implementation of hook_civicrm_uninstall
- *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_uninstall
- */
-function _electoral_civix_civicrm_uninstall() {
-  _electoral_civix_civicrm_config();
-  if ($upgrader = _electoral_civix_upgrader()) {
-    $upgrader->onUninstall();
-  }
-}
-
-/**
- * (Delegated) Implementation of hook_civicrm_enable
- *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_enable
- */
-function _electoral_civix_civicrm_enable() {
-  _electoral_civix_civicrm_config();
-  if ($upgrader = _electoral_civix_upgrader()) {
-    if (is_callable(array($upgrader, 'onEnable'))) {
-      $upgrader->onEnable();
+  /**
+   * Translate a string using the extension's domain.
+   *
+   * If the extension doesn't have a specific translation
+   * for the string, fallback to the default translations.
+   *
+   * @param string $text
+   *   Canonical message text (generally en_US).
+   * @param array $params
+   * @return string
+   *   Translated text.
+   * @see ts
+   */
+  public static function ts($text, $params = []): string {
+    if (!array_key_exists('domain', $params)) {
+      $params['domain'] = [self::LONG_NAME, NULL];
     }
+    return ts($text, $params);
   }
-}
 
-/**
- * (Delegated) Implementation of hook_civicrm_disable
- *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_disable
- * @return mixed
- */
-function _electoral_civix_civicrm_disable() {
-  _electoral_civix_civicrm_config();
-  if ($upgrader = _electoral_civix_upgrader()) {
-    if (is_callable(array($upgrader, 'onDisable'))) {
-      $upgrader->onDisable();
+  /**
+   * Get the URL of a resource file (in this extension).
+   *
+   * @param string|NULL $file
+   *   Ex: NULL.
+   *   Ex: 'css/foo.css'.
+   * @return string
+   *   Ex: 'http://example.org/sites/default/ext/org.example.foo'.
+   *   Ex: 'http://example.org/sites/default/ext/org.example.foo/css/foo.css'.
+   */
+  public static function url($file = NULL): string {
+    if ($file === NULL) {
+      return rtrim(CRM_Core_Resources::singleton()->getUrl(self::LONG_NAME), '/');
     }
-  }
-}
-
-/**
- * (Delegated) Implementation of hook_civicrm_upgrade
- *
- * @param $op string, the type of operation being performed; 'check' or 'enqueue'
- * @param $queue CRM_Queue_Queue, (for 'enqueue') the modifiable list of pending up upgrade tasks
- *
- * @return mixed  based on op. for 'check', returns array(boolean) (TRUE if upgrades are pending)
- *                for 'enqueue', returns void
- *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_upgrade
- */
-function _electoral_civix_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
-  if ($upgrader = _electoral_civix_upgrader()) {
-    return $upgrader->onUpgrade($op, $queue);
-  }
-}
-
-/**
- * @return CRM_Electoral_Upgrader
- */
-function _electoral_civix_upgrader() {
-  if (!file_exists(__DIR__.'/CRM/Electoral/Upgrader.php')) {
-    return NULL;
-  } else {
-    return CRM_Electoral_Upgrader_Base::instance();
-  }
-}
-
-/**
- * Search directory tree for files which match a glob pattern
- *
- * Note: Dot-directories (like "..", ".git", or ".svn") will be ignored.
- * Note: In Civi 4.3+, delegate to CRM_Utils_File::findFiles()
- *
- * @param $dir string, base dir
- * @param $pattern string, glob pattern, eg "*.txt"
- * @return array(string)
- */
-function _electoral_civix_find_files($dir, $pattern) {
-  if (is_callable(array('CRM_Utils_File', 'findFiles'))) {
-    return CRM_Utils_File::findFiles($dir, $pattern);
+    return CRM_Core_Resources::singleton()->getUrl(self::LONG_NAME, $file);
   }
 
-  $todos = array($dir);
-  $result = array();
-  while (!empty($todos)) {
-    $subdir = array_shift($todos);
-    foreach (_electoral_civix_glob("$subdir/$pattern") as $match) {
-      if (!is_dir($match)) {
-        $result[] = $match;
-      }
+  /**
+   * Get the path of a resource file (in this extension).
+   *
+   * @param string|NULL $file
+   *   Ex: NULL.
+   *   Ex: 'css/foo.css'.
+   * @return string
+   *   Ex: '/var/www/example.org/sites/default/ext/org.example.foo'.
+   *   Ex: '/var/www/example.org/sites/default/ext/org.example.foo/css/foo.css'.
+   */
+  public static function path($file = NULL) {
+    // return CRM_Core_Resources::singleton()->getPath(self::LONG_NAME, $file);
+    return __DIR__ . ($file === NULL ? '' : (DIRECTORY_SEPARATOR . $file));
+  }
+
+  /**
+   * Get the name of a class within this extension.
+   *
+   * @param string $suffix
+   *   Ex: 'Page_HelloWorld' or 'Page\\HelloWorld'.
+   * @return string
+   *   Ex: 'CRM_Foo_Page_HelloWorld'.
+   */
+  public static function findClass($suffix) {
+    return self::CLASS_PREFIX . '_' . str_replace('\\', '_', $suffix);
+  }
+
+  /**
+   * @return \CiviMix\Schema\SchemaHelperInterface
+   */
+  public static function schema() {
+    if (!isset($GLOBALS['CiviMixSchema'])) {
+      pathload()->loadPackage('civimix-schema@5', TRUE);
     }
-    if ($dh = opendir($subdir)) {
-      while (FALSE !== ($entry = readdir($dh))) {
-        $path = $subdir . DIRECTORY_SEPARATOR . $entry;
-        if ($entry{0} == '.') {
-        } elseif (is_dir($path)) {
-          $todos[] = $path;
-        }
-      }
-      closedir($dh);
-    }
+    return $GLOBALS['CiviMixSchema']->getHelper(static::LONG_NAME);
   }
-  return $result;
-}
-/**
- * (Delegated) Implementation of hook_civicrm_managed
- *
- * Find any *.mgd.php files, merge their content, and return.
- *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_managed
- */
-function _electoral_civix_civicrm_managed(&$entities) {
-  $mgdFiles = _electoral_civix_find_files(__DIR__, '*.mgd.php');
-  foreach ($mgdFiles as $file) {
-    $es = include $file;
-    foreach ($es as $e) {
-      if (empty($e['module'])) {
-        $e['module'] = 'com.jlacey.electoral';
-      }
-      $entities[] = $e;
-    }
-  }
+
 }
 
-/**
- * (Delegated) Implementation of hook_civicrm_caseTypes
- *
- * Find any and return any files matching "xml/case/*.xml"
- *
- * Note: This hook only runs in CiviCRM 4.4+.
- *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_caseTypes
- */
-function _electoral_civix_civicrm_caseTypes(&$caseTypes) {
-  if (!is_dir(__DIR__ . '/xml/case')) {
+use CRM_Electoral_ExtensionUtil as E;
+
+($GLOBALS['_PathLoad'][0] ?? require __DIR__ . '/mixin/lib/pathload-0.php');
+pathload()->addSearchDir(__DIR__ . '/mixin/lib');
+spl_autoload_register('_electoral_civix_class_loader', TRUE, TRUE);
+
+function _electoral_civix_class_loader($class) {
+  if ($class === 'CRM_Electoral_DAO_Base') {
+    if (version_compare(CRM_Utils_System::version(), '5.74.beta', '>=')) {
+      class_alias('CRM_Core_DAO_Base', 'CRM_Electoral_DAO_Base');
+      // ^^ Materialize concrete names -- encourage IDE's to pick up on this association.
+    }
+    else {
+      $realClass = 'CiviMix\\Schema\\Electoral\\DAO';
+      class_alias($realClass, $class);
+      // ^^ Abstract names -- discourage IDE's from picking up on this association.
+    }
     return;
   }
 
-  foreach (_electoral_civix_glob(__DIR__ . '/xml/case/*.xml') as $file) {
-    $name = preg_replace('/\.xml$/', '', basename($file));
-    if ($name != CRM_Case_XMLProcessor::mungeCaseType($name)) {
-      $errorMessage = sprintf("Case-type file name is malformed (%s vs %s)", $name, CRM_Case_XMLProcessor::mungeCaseType($name));
-      CRM_Core_Error::fatal($errorMessage);
-      // throw new CRM_Core_Exception($errorMessage);
-    }
-    $caseTypes[$name] = array(
-      'module' => 'com.jlacey.electoral',
-      'name' => $name,
-      'file' => $file,
-    );
+  // This allows us to tap-in to the installation process (without incurring real file-reads on typical requests).
+  if (strpos($class, 'CiviMix\\Schema\\Electoral\\') === 0) {
+    // civimix-schema@5 is designed for backported use in download/activation workflows,
+    // where new revisions may become dynamically available.
+    pathload()->loadPackage('civimix-schema@5', TRUE);
+    CiviMix\Schema\loadClass($class);
+  }
+}
+
+function _electoral_civix_mixin_polyfill() {
+  if (!class_exists('CRM_Extension_MixInfo')) {
+    $polyfill = __DIR__ . '/mixin/polyfill.php';
+    (require $polyfill)(E::LONG_NAME, E::SHORT_NAME, E::path());
   }
 }
 
 /**
- * Glob wrapper which is guaranteed to return an array.
+ * (Delegated) Implements hook_civicrm_config().
  *
- * The documentation for glob() says, "On some systems it is impossible to
- * distinguish between empty match and an error." Anecdotally, the return
- * result for an empty match is sometimes array() and sometimes FALSE.
- * This wrapper provides consistency.
- *
- * @link http://php.net/glob
- * @param string $pattern
- * @return array, possibly empty
+ * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_config
  */
-function _electoral_civix_glob($pattern) {
-  $result = glob($pattern);
-  return is_array($result) ? $result : array();
+function _electoral_civix_civicrm_config($config = NULL) {
+  static $configured = FALSE;
+  if ($configured) {
+    return;
+  }
+  $configured = TRUE;
+
+  $extRoot = __DIR__ . DIRECTORY_SEPARATOR;
+  $include_path = $extRoot . PATH_SEPARATOR . get_include_path();
+  set_include_path($include_path);
+  _electoral_civix_mixin_polyfill();
 }
 
 /**
- * Inserts a navigation menu item at a given place in the hierarchy
+ * Implements hook_civicrm_install().
  *
- * $menu - menu hierarchy
- * $path - path where insertion should happen (ie. Administer/System Settings)
- * $item - menu you need to insert (parent/child attributes will be filled for you)
- * $parentId - used internally to recurse in the menu structure
+ * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_install
  */
-function _electoral_civix_insert_navigation_menu(&$menu, $path, $item, $parentId = NULL) {
-  static $navId;
+function _electoral_civix_civicrm_install() {
+  _electoral_civix_civicrm_config();
+  _electoral_civix_mixin_polyfill();
+}
 
+/**
+ * (Delegated) Implements hook_civicrm_enable().
+ *
+ * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_enable
+ */
+function _electoral_civix_civicrm_enable(): void {
+  _electoral_civix_civicrm_config();
+  _electoral_civix_mixin_polyfill();
+}
+
+/**
+ * Inserts a navigation menu item at a given place in the hierarchy.
+ *
+ * @param array $menu - menu hierarchy
+ * @param string $path - path to parent of this item, e.g. 'my_extension/submenu'
+ *    'Mailing', or 'Administer/System Settings'
+ * @param array $item - the item to insert (parent/child attributes will be
+ *    filled for you)
+ *
+ * @return bool
+ */
+function _electoral_civix_insert_navigation_menu(&$menu, $path, $item) {
   // If we are done going down the path, insert menu
   if (empty($path)) {
-    if (!$navId) $navId = CRM_Core_DAO::singleValueQuery("SELECT max(id) FROM civicrm_navigation");
-    $navId ++;
-    $menu[$navId] = array (
-      'attributes' => array_merge($item, array(
-        'label'      => CRM_Utils_Array::value('name', $item),
-        'active'     => 1,
-        'parentID'   => $parentId,
-        'navID'      => $navId,
-      ))
-    );
-    return true;
-  } else {
+    $menu[] = [
+      'attributes' => array_merge([
+        'label' => $item['name'] ?? NULL,
+        'active' => 1,
+      ], $item),
+    ];
+    return TRUE;
+  }
+  else {
     // Find an recurse into the next level down
-    $found = false;
+    $found = FALSE;
     $path = explode('/', $path);
     $first = array_shift($path);
     foreach ($menu as $key => &$entry) {
       if ($entry['attributes']['name'] == $first) {
-        if (!$entry['child']) $entry['child'] = array();
-        $found = _electoral_civix_insert_navigation_menu($entry['child'], implode('/', $path), $item, $key);
+        if (!isset($entry['child'])) {
+          $entry['child'] = [];
+        }
+        $found = _electoral_civix_insert_navigation_menu($entry['child'], implode('/', $path), $item);
       }
     }
     return $found;
@@ -263,17 +201,44 @@ function _electoral_civix_insert_navigation_menu(&$menu, $path, $item, $parentId
 }
 
 /**
- * (Delegated) Implementation of hook_civicrm_alterSettingsFolders
- *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_alterSettingsFolders
+ * (Delegated) Implements hook_civicrm_navigationMenu().
  */
-function _electoral_civix_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
-  static $configured = FALSE;
-  if ($configured) return;
-  $configured = TRUE;
+function _electoral_civix_navigationMenu(&$nodes) {
+  if (!is_callable(['CRM_Core_BAO_Navigation', 'fixNavigationMenu'])) {
+    _electoral_civix_fixNavigationMenu($nodes);
+  }
+}
 
-  $settingsDir = __DIR__ . DIRECTORY_SEPARATOR . 'settings';
-  if(is_dir($settingsDir) && !in_array($settingsDir, $metaDataFolders)) {
-    $metaDataFolders[] = $settingsDir;
+/**
+ * Given a navigation menu, generate navIDs for any items which are
+ * missing them.
+ */
+function _electoral_civix_fixNavigationMenu(&$nodes) {
+  $maxNavID = 1;
+  array_walk_recursive($nodes, function($item, $key) use (&$maxNavID) {
+    if ($key === 'navID') {
+      $maxNavID = max($maxNavID, $item);
+    }
+  });
+  _electoral_civix_fixNavigationMenuItems($nodes, $maxNavID, NULL);
+}
+
+function _electoral_civix_fixNavigationMenuItems(&$nodes, &$maxNavID, $parentID) {
+  $origKeys = array_keys($nodes);
+  foreach ($origKeys as $origKey) {
+    if (!isset($nodes[$origKey]['attributes']['parentID']) && $parentID !== NULL) {
+      $nodes[$origKey]['attributes']['parentID'] = $parentID;
+    }
+    // If no navID, then assign navID and fix key.
+    if (!isset($nodes[$origKey]['attributes']['navID'])) {
+      $newKey = ++$maxNavID;
+      $nodes[$origKey]['attributes']['navID'] = $newKey;
+      $nodes[$newKey] = $nodes[$origKey];
+      unset($nodes[$origKey]);
+      $origKey = $newKey;
+    }
+    if (isset($nodes[$origKey]['child']) && is_array($nodes[$origKey]['child'])) {
+      _electoral_civix_fixNavigationMenuItems($nodes[$origKey]['child'], $maxNavID, $nodes[$origKey]['attributes']['navID']);
+    }
   }
 }
