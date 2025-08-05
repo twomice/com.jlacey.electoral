@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <extension key="com.jlacey.electoral" type="module">
   <file>electoral</file>
-  <name>Electoral API</name>
+  <name>Electoral API - legacy fork</name>
   <description>Electoral API integration</description>
   <license>AGPL-3.0</license>
   <maintainer>
