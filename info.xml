@@ -13,8 +13,8 @@
     <url desc="Support">https://github.com/josephlacey/com.jlacey.electoral/issues</url>
     <url desc="Licensing">http://www.gnu.org/licenses/agpl-3.0.html</url>
   </urls>
-  <releaseDate>2015-03-02</releaseDate>
-  <version>2.0</version>
+  <releaseDate>2025-08-04</releaseDate>
+  <version>2.1.0</version>
   <develStage>stable</develStage>
   <compatibility>
     <ver>5.38</ver>
